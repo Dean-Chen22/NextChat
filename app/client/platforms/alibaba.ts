@@ -16,7 +16,6 @@ import {
   LLMModel,
   SpeechOptions,
   MultimodalContent,
-  SearchRequestPayload,
 } from "../api";
 import {
   getMessageTextContent,
@@ -34,21 +33,31 @@ export interface OpenAIListModelResponse {
   }>;
 }
 
-interface RequestPayload extends SearchRequestPayload {
+interface RequestInput {
+  messages: {
+    role: "system" | "user" | "assistant";
+    content: string | MultimodalContent[];
+  }[];
+}
+interface RequestParam {
+  result_format: string;
+  incremental_output?: boolean;
+  temperature: number;
+  repetition_penalty?: number;
+  top_p: number;
+  max_tokens?: number;
+}
+interface RequestPayload {
   model: string;
-  input: {
-    messages: {
-      role: "system" | "user" | "assistant";
-      content: string | MultimodalContent[];
-    }[];
-  };
-  parameters: {
-    result_format: string;
-    incremental_output: boolean;
-    temperature: number;
-    top_p: number;
-  };
+  input: RequestInput;
+  parameters: RequestParam;
   enable_search?: boolean;
+  search_options?: {
+    search_strategy: "standard" | "pro";
+    enable_citation: boolean;
+    enable_source: boolean;
+    forced_search: boolean;
+  };
 }
 
 export class QwenApi implements LLMApi {
@@ -104,9 +113,8 @@ export class QwenApi implements LLMApi {
     };
 
     const shouldStream = !!options.config.stream;
-    const modelName = modelConfig.model.replace("@Alibaba", "");
     const requestPayload: RequestPayload = {
-      model: modelName,
+      model: modelConfig.model,
       input: {
         messages,
       },
