@@ -352,7 +352,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     _isDeepSeek,
     _isXAI,
     _isChatGLM,
-    isSiliconFlow,
+    _isSiliconFlow,
     apiKey,
     isEnabledAccessControl,
   } = getConfig();
