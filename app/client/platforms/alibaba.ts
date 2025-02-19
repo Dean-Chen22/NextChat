@@ -101,16 +101,25 @@ export class QwenApi implements LLMApi {
     return [baseUrl, path].join("/");
   }
 
-  extractMessage(res: any) {
+  extractMessage(res: any): {
+    content: string;
+    search_response?: { search_results?: any[]; citations?: string[] };
+  } {
     const message = res?.output?.choices?.at(0)?.message;
-    const content = message?.content ?? "";
-    if (message?.search_results || message?.citations) {
-      content += ` [${Array.from(
-        { length: message?.search_results?.length || 0 },
-        (_, i) => i + 1,
-      ).join("][")}]`;
+    let content = message?.content ?? "";
+    const search_response = {
+      search_results: message?.search_results,
+      citations: message?.citations,
+    };
+    if (message?.search_results?.length) {
+      content =
+        content +
+        ` [${Array.from(
+          { length: message.search_results.length },
+          (_, i) => i + 1,
+        ).join("][")}]`;
     }
-    return { content };
+    return { content, search_response };
   }
 
   speech(_options: SpeechOptions): Promise<ArrayBuffer> {
@@ -279,7 +288,7 @@ export class QwenApi implements LLMApi {
         clearTimeout(requestTimeoutId);
 
         const resJson = await res.json();
-        const { content, search_response } = this.extractMessage(resJson);
+        const { content } = this.extractMessage(resJson);
         options.onFinish(content, res);
       }
     } catch (e) {
