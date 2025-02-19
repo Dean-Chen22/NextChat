@@ -53,8 +53,16 @@ async function request(req: NextRequest) {
 
   // alibaba use base url or just remove the path
   const baseUrl =
+    serverConfig.alibabaUrl ||
     "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
 
+  if (!baseUrl.startsWith("http")) {
+    baseUrl = `https://${baseUrl}`;
+  }
+
+  if (baseUrl.endsWith("/")) {
+    baseUrl = baseUrl.slice(0, -1);
+  }
   console.log("[Base Url]", baseUrl);
 
   const timeoutId = setTimeout(
