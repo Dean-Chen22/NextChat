@@ -32,6 +32,30 @@ export interface OpenAIListModelResponse {
   }>;
 }
 
+interface MessageResponse {
+  content: string | null;
+  tool_calls: ChatMessageTool[];
+  reasoning_content: string | null;
+  search_results?: Array<{
+    site_name: string;
+    icon: string;
+    index: number;
+    title: string;
+    url: string;
+  }>;
+  citations?: string[];
+  search_response?: {
+    search_results?: Array<{
+      site_name: string;
+      icon: string;
+      index: number;
+      title: string;
+      url: string;
+    }>;
+    citations?: string[];
+  };
+}
+
 interface RequestPayload {
   model: string;
   messages: Array<{
@@ -80,7 +104,7 @@ export class QwenApi implements LLMApi {
   extractMessage(res: any) {
     const message = res?.output?.choices?.at(0)?.message;
     const content = message?.content ?? "";
-    const search_response = {
+    const search_response = message?.search_response ?? {
       search_results: message?.search_results,
       citations: message?.citations,
     };
@@ -168,11 +192,7 @@ export class QwenApi implements LLMApi {
             // console.log("parseSSE", text, runTools);
             const json = JSON.parse(text);
             const choices = json.output.choices as Array<{
-              message: {
-                content: string | null;
-                tool_calls: ChatMessageTool[];
-                reasoning_content: string | null;
-              };
+              message: MessageResponse;
             }>;
 
             if (!choices?.length) return { isThinking: false, content: "" };
@@ -258,13 +278,8 @@ export class QwenApi implements LLMApi {
 
         const resJson = await res.json();
         const { content, search_response } = this.extractMessage(resJson);
-        const message = content;
-        if (search_response?.search_results || search_response?.citations) {
-          options.onUpdate?.(message, "");
-          options.onFinish(message, res);
-        } else {
-          options.onFinish(message, res);
-        }
+        const message = { content, search_response };
+        options.onFinish(content, res, message);
       }
     } catch (e) {
       console.log("[Request] failed to make a chat request", e);
