@@ -67,26 +67,25 @@ async function request(req: NextRequest) {
       const jsonBody = JSON.parse(clonedBody) as AlibabaRequestBody;
 
       requestBody = {
-        model: "qwen-max",
+        model: jsonBody.model || "qwen-max",
         input: {
-          messages: [
-            {
-              role: "user",
-              content: jsonBody.messages?.[0]?.content || "Hello",
-            },
-          ],
+          messages: jsonBody.messages || [],
         },
         parameters: {
           result_format: "message",
-          incremental_output: false,
+          incremental_output: req.headers.get("X-DashScope-SSE") === "enable",
           temperature: 0.7,
           top_p: 0.99,
-          enable_search: true,
+          enable_search: jsonBody.modelConfig?.enableSearch ?? true,
           search_options: {
-            search_strategy: "pro",
-            enable_citation: true,
-            enable_source: true,
-            forced_search: true,
+            search_strategy:
+              jsonBody.modelConfig?.searchOptions?.searchStrategy ?? "pro",
+            enable_citation:
+              jsonBody.modelConfig?.searchOptions?.enableCitation ?? true,
+            enable_source:
+              jsonBody.modelConfig?.searchOptions?.enableSource ?? true,
+            forced_search:
+              jsonBody.modelConfig?.searchOptions?.forcedSearch ?? true,
           },
         },
       };
@@ -121,47 +120,7 @@ async function request(req: NextRequest) {
     signal: controller.signal,
   };
 
-  // Transform request body to match DashScope API format
-  if (req.body) {
-    try {
-      const clonedBody = await req.text();
-      const jsonBody = JSON.parse(clonedBody) as AlibabaRequestBody;
-
-      const requestBody = {
-        model: "qwen-max",
-        input: {
-          messages: [
-            {
-              role: "user",
-              content: jsonBody.messages?.[0]?.content || "",
-            },
-          ],
-        },
-        parameters: {
-          result_format: "message",
-          incremental_output: false,
-          temperature: 0.7,
-          top_p: 0.99,
-          enable_search: true,
-          search_options: {
-            search_strategy: "pro",
-            enable_citation: true,
-            enable_source: true,
-            forced_search: true,
-          },
-        },
-      };
-
-      // Update request body with DashScope format
-      fetchOptions.body = JSON.stringify(requestBody);
-    } catch (e) {
-      console.error(`[Alibaba] request processing`, e);
-      return NextResponse.json(
-        { error: true, message: "Failed to process request body" },
-        { status: 400 },
-      );
-    }
-  }
+  // Request body has already been transformed above
   try {
     const res = await fetch(baseUrl, fetchOptions);
 
