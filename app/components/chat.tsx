@@ -571,11 +571,12 @@ export function ChatActions(props: {
   const isMobileScreen = useMobileScreen();
 
   useEffect(() => {
+    const { setAttachImages, setUploading } = props;
     const show = isVisionModel(currentModel);
     setShowUploadImage(show);
     if (!show) {
-      props.setAttachImages([]);
-      props.setUploading(false);
+      setAttachImages([]);
+      setUploading(false);
     }
 
     // if current model is not available
@@ -595,7 +596,7 @@ export function ChatActions(props: {
           : nextModel.name,
       );
     }
-  }, [chatStore, currentModel, models, session]);
+  }, [chatStore, currentModel, models, session, props]);
 
   return (
     <div className={styles["chat-input-actions"]}>
@@ -1018,7 +1019,7 @@ function _Chat() {
       scrollRef.current.getBoundingClientRect().top;
     // leave some space for user question
     return topDistance < 100;
-  }, [scrollRef?.current?.scrollHeight]);
+  }, [scrollRef]);
 
   const isTyping = userInput !== "";
 
@@ -1172,8 +1173,7 @@ function _Chat() {
         session.mask.modelConfig = { ...config.modelConfig };
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  }, [session, chatStore, config.modelConfig]);
 
   // check if should send message
   const onInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1674,7 +1674,15 @@ function _Chat() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [messages, chatStore, navigate, session]);
+  }, [
+    messages,
+    chatStore,
+    navigate,
+    session,
+    inputRef,
+    setShowShortcutKeyModal,
+    getMessageTextContent,
+  ]);
 
   const [showChatSidePanel, setShowChatSidePanel] = useState(false);
 
@@ -1944,8 +1952,7 @@ function _Chat() {
                               {Locale.Chat.Typing}
                             </div>
                           )}
-                          {/* @ts-expect-error Tool calls are dynamically typed */}
-                          {message?.tools?.length > 0 && (
+                          {(message?.tools?.length ?? 0) > 0 && (
                             <div className={styles["chat-message-tools"]}>
                               {message?.tools?.map((tool) => (
                                 <div
