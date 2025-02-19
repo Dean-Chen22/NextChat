@@ -133,15 +133,15 @@ export class QwenApi implements LLMApi {
         incremental_output: shouldStream,
         temperature: modelConfig.temperature,
         top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p,
+        enable_search: modelConfig.enableSearch,
       },
-      enable_search: modelConfig.enableSearch,
     };
 
     // Add search parameters if enabled
     if (modelConfig.enableSearch) {
       const strategy = (modelConfig.searchOptions?.searchStrategy ??
         "standard") as "standard" | "pro";
-      requestPayload.search_options = {
+      requestPayload.parameters.search_options = {
         search_strategy: strategy,
         enable_citation: modelConfig.searchOptions?.enableCitation ?? false,
         enable_source: modelConfig.searchOptions?.enableSource ?? false,
