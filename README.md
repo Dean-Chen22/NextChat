@@ -361,6 +361,10 @@ SiliconFlow API Key.
 
 SiliconFlow API URL.
 
+### `ALIBABA_API_KEY` (optional)
+
+API key for Alibaba web search functionality. Required if you want to use the web search feature.
+
 ## Requirements
 
 NodeJS >= 18, Docker >= 20

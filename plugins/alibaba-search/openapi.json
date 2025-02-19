@@ -1,0 +1,52 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Alibaba Web Search",
+    "description": "Web search capability using Alibaba Cloud's search API",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://websearch.aliyuncs.com"
+    }
+  ],
+  "paths": {
+    "/api/v1/search": {
+      "post": {
+        "operationId": "AlibabaWebSearch",
+        "description": "Search the web using Alibaba's search API",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "description": "Search query (2-100 characters)",
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "timeRange",
+            "in": "query",
+            "description": "Time range for results",
+            "schema": {
+              "type": "string",
+              "enum": ["OneDay", "OneWeek", "OneMonth", "OneYear", "NoLimit"]
+            }
+          },
+          {
+            "name": "industry",
+            "in": "query",
+            "description": "Industry filter",
+            "schema": {
+              "type": "string",
+              "enum": ["finance", "law", "medical", "internet", "tax", "news_province", "news_center"]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
