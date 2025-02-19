@@ -81,7 +81,7 @@ const tw = {
     Rename: "重新命名對話",
     Typing: "正在輸入…",
     Input: (submitKey: string) => {
-      var inputHints = `輸入訊息後，按下 ${submitKey} 鍵即可傳送`;
+      let inputHints = `輸入訊息後，按下 ${submitKey} 鍵即可傳送`;
       if (submitKey === String(SubmitKey.Enter)) {
         inputHints += "，Shift + Enter 鍵換行";
       }
@@ -389,6 +389,28 @@ const tw = {
     },
 
     Model: "模型 (model)",
+    Search: {
+      Enable: {
+        Title: "啟用搜尋",
+        SubTitle: "啟用網際網路搜尋功能",
+      },
+      Source: {
+        Title: "顯示來源",
+        SubTitle: "在結果中顯示搜尋來源",
+      },
+      Citation: {
+        Title: "啟用引用",
+        SubTitle: "使用[1]或[ref_1]樣式顯示引用",
+      },
+      Strategy: {
+        Title: "搜尋策略",
+        SubTitle: "控制搜尋品質（Pro模式檢索更多網際網路資訊）",
+      },
+      ForcedSearch: {
+        Title: "強制搜尋",
+        SubTitle: "強制每個請求啟用搜尋",
+      },
+    },
     CompressModel: {
       Title: "壓縮模型",
       SubTitle: "用於壓縮歷史記錄的模型",

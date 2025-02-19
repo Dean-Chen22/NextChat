@@ -1,6 +1,10 @@
 import { ServiceProvider } from "@/app/constant";
-import { ModalConfigValidator, ModelConfig } from "../store";
-
+import {
+  ModalConfigValidator,
+  ModelConfig,
+  SearchConfigValidator,
+} from "../store";
+import { LocaleType } from "../locales";
 import Locale from "../locales";
 import { InputRange } from "./input-range";
 import { ListItem, Select } from "./ui-lib";
@@ -268,6 +272,159 @@ export function ModelConfigList(props: {
             ))}
         </Select>
       </ListItem>
+
+      {props.modelConfig?.providerName === ServiceProvider.Alibaba && (
+        <>
+          <ListItem
+            title={
+              (Locale.Settings as LocaleType["Settings"]).Search.Enable.Title
+            }
+            subTitle={
+              (Locale.Settings as LocaleType["Settings"]).Search.Enable.SubTitle
+            }
+          >
+            <input
+              type="checkbox"
+              checked={props.modelConfig.enableSearch}
+              onChange={(e) =>
+                props.updateConfig((config) => {
+                  config.enableSearch = e.currentTarget.checked;
+                  if (!config.searchOptions) {
+                    config.searchOptions = {
+                      enableSource: false,
+                      enableCitation: false,
+                      searchStrategy: "standard",
+                      forcedSearch: false,
+                    };
+                  }
+                })
+              }
+            />
+          </ListItem>
+          {props.modelConfig.enableSearch && (
+            <>
+              <ListItem
+                title={
+                  (Locale.Settings as LocaleType["Settings"]).Search.Source
+                    .Title
+                }
+                subTitle={
+                  (Locale.Settings as LocaleType["Settings"]).Search.Source
+                    .SubTitle
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={props.modelConfig.searchOptions?.enableSource}
+                  onChange={(e) =>
+                    props.updateConfig((config) => {
+                      if (!config.searchOptions) {
+                        config.searchOptions = {
+                          enableSource: false,
+                          enableCitation: false,
+                          searchStrategy: "standard",
+                          forcedSearch: false,
+                        };
+                      }
+                      config.searchOptions.enableSource =
+                        e.currentTarget.checked;
+                    })
+                  }
+                />
+              </ListItem>
+              <ListItem
+                title={
+                  (Locale.Settings as LocaleType["Settings"]).Search.Citation
+                    .Title
+                }
+                subTitle={
+                  (Locale.Settings as LocaleType["Settings"]).Search.Citation
+                    .SubTitle
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={props.modelConfig.searchOptions?.enableCitation}
+                  onChange={(e) =>
+                    props.updateConfig((config) => {
+                      if (!config.searchOptions) {
+                        config.searchOptions = {
+                          enableSource: false,
+                          enableCitation: false,
+                          searchStrategy: "standard",
+                          forcedSearch: false,
+                        };
+                      }
+                      config.searchOptions.enableCitation =
+                        e.currentTarget.checked;
+                    })
+                  }
+                />
+              </ListItem>
+              <ListItem
+                title={
+                  (Locale.Settings as LocaleType["Settings"]).Search.Strategy
+                    .Title
+                }
+                subTitle={
+                  (Locale.Settings as LocaleType["Settings"]).Search.Strategy
+                    .SubTitle
+                }
+              >
+                <select
+                  value={props.modelConfig.searchOptions?.searchStrategy}
+                  onChange={(e) =>
+                    props.updateConfig((config) => {
+                      if (!config.searchOptions) {
+                        config.searchOptions = {
+                          enableSource: false,
+                          enableCitation: false,
+                          searchStrategy: "standard",
+                          forcedSearch: false,
+                        };
+                      }
+                      config.searchOptions.searchStrategy =
+                        SearchConfigValidator.searchStrategy(e.target.value);
+                    })
+                  }
+                >
+                  <option value="standard">Standard</option>
+                  <option value="pro">Pro</option>
+                </select>
+              </ListItem>
+              <ListItem
+                title={
+                  (Locale.Settings as LocaleType["Settings"]).Search
+                    .ForcedSearch.Title
+                }
+                subTitle={
+                  (Locale.Settings as LocaleType["Settings"]).Search
+                    .ForcedSearch.SubTitle
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={props.modelConfig.searchOptions?.forcedSearch}
+                  onChange={(e) =>
+                    props.updateConfig((config) => {
+                      if (!config.searchOptions) {
+                        config.searchOptions = {
+                          enableSource: false,
+                          enableCitation: false,
+                          searchStrategy: "standard",
+                          forcedSearch: false,
+                        };
+                      }
+                      config.searchOptions.forcedSearch =
+                        e.currentTarget.checked;
+                    })
+                  }
+                />
+              </ListItem>
+            </>
+          )}
+        </>
+      )}
     </>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
-import { ApiPath, Alibaba, ALIBABA_BASE_URL } from "@/app/constant";
+import { Alibaba } from "@/app/constant";
 import {
-  useAccessStore,
   useAppConfig,
   useChatStore,
   ChatMessageTool,
@@ -15,8 +14,8 @@ import {
   LLMModel,
   SpeechOptions,
   MultimodalContent,
+  SearchRequestPayload,
 } from "../api";
-import { getClientConfig } from "@/app/config/client";
 import {
   getMessageTextContent,
   getMessageTextContentWithoutThinking,
@@ -33,58 +32,28 @@ export interface OpenAIListModelResponse {
   }>;
 }
 
-interface RequestInput {
+interface RequestPayload extends SearchRequestPayload {
+  model: string;
   messages: {
     role: "system" | "user" | "assistant";
     content: string | MultimodalContent[];
   }[];
-}
-interface RequestParam {
-  result_format: string;
-  incremental_output?: boolean;
+  stream?: boolean;
   temperature: number;
-  repetition_penalty?: number;
   top_p: number;
-  max_tokens?: number;
-}
-interface RequestPayload {
-  model: string;
-  input: RequestInput;
-  parameters: RequestParam;
+  enable_search?: boolean;
 }
 
 export class QwenApi implements LLMApi {
-  path(path: string): string {
-    const accessStore = useAccessStore.getState();
-
-    let baseUrl = "";
-
-    if (accessStore.useCustomConfig) {
-      baseUrl = accessStore.alibabaUrl;
-    }
-
-    if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      baseUrl = isApp ? ALIBABA_BASE_URL : ApiPath.Alibaba;
-    }
-
-    if (baseUrl.endsWith("/")) {
-      baseUrl = baseUrl.slice(0, baseUrl.length - 1);
-    }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.Alibaba)) {
-      baseUrl = "https://" + baseUrl;
-    }
-
-    console.log("[Proxy Endpoint] ", baseUrl, path);
-
-    return [baseUrl, path].join("/");
+  path(): string {
+    return "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
   }
 
   extractMessage(res: any) {
     return res?.output?.choices?.at(0)?.message?.content ?? "";
   }
 
-  speech(options: SpeechOptions): Promise<ArrayBuffer> {
+  speech(_options: SpeechOptions): Promise<ArrayBuffer> {
     throw new Error("Method not implemented.");
   }
 
@@ -108,17 +77,22 @@ export class QwenApi implements LLMApi {
     const shouldStream = !!options.config.stream;
     const requestPayload: RequestPayload = {
       model: modelConfig.model,
-      input: {
-        messages,
-      },
-      parameters: {
-        result_format: "message",
-        incremental_output: shouldStream,
-        temperature: modelConfig.temperature,
-        // max_tokens: modelConfig.max_tokens,
-        top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p, // qwen top_p is should be < 1
-      },
+      messages,
+      stream: shouldStream,
+      temperature: modelConfig.temperature,
+      top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p, // qwen top_p is should be < 1
+      enable_search: modelConfig.enableSearch,
     };
+
+    // Add search parameters if enabled
+    if (modelConfig.enableSearch) {
+      const strategy = (modelConfig.searchOptions?.searchStrategy ??
+        "standard") as "standard" | "pro";
+      requestPayload.search_options = {
+        search_strategy: strategy,
+        enable_citation: modelConfig.searchOptions?.enableCitation ?? false,
+      };
+    }
 
     const controller = new AbortController();
     options.onController?.(controller);
@@ -129,7 +103,7 @@ export class QwenApi implements LLMApi {
         "X-DashScope-SSE": shouldStream ? "enable" : "disable",
       };
 
-      const chatPath = this.path(Alibaba.ChatPath);
+      const chatPath = this.path();
       const chatPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
@@ -185,7 +159,7 @@ export class QwenApi implements LLMApi {
                   },
                 });
               } else {
-                // @ts-ignore
+                // @ts-expect-error Dynamic property access for function arguments
                 runTools[index]["function"]["arguments"] += args;
               }
             }

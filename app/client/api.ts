@@ -84,6 +84,17 @@ export interface LLMUsage {
   total: number;
 }
 
+export interface SearchOptions {
+  enable_source: boolean;
+  enable_citation: boolean;
+  search_strategy: "standard" | "pro";
+  forced_search: boolean;
+}
+
+export interface SearchRequestPayload {
+  search_options?: SearchOptions;
+}
+
 export interface LLMModel {
   name: string;
   displayName?: string;
@@ -114,7 +125,7 @@ interface Model {
   ctxlen: number;
 }
 
-interface ChatProvider {
+interface _ChatProvider {
   name: ProviderName;
   apiConfig: {
     baseUrl: string;
@@ -251,14 +262,14 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     const isAzure = modelConfig.providerName === ServiceProvider.Azure;
     const isAnthropic = modelConfig.providerName === ServiceProvider.Anthropic;
     const isBaidu = modelConfig.providerName == ServiceProvider.Baidu;
-    const isByteDance = modelConfig.providerName === ServiceProvider.ByteDance;
-    const isAlibaba = modelConfig.providerName === ServiceProvider.Alibaba;
-    const isMoonshot = modelConfig.providerName === ServiceProvider.Moonshot;
-    const isIflytek = modelConfig.providerName === ServiceProvider.Iflytek;
-    const isDeepSeek = modelConfig.providerName === ServiceProvider.DeepSeek;
-    const isXAI = modelConfig.providerName === ServiceProvider.XAI;
-    const isChatGLM = modelConfig.providerName === ServiceProvider.ChatGLM;
-    const isSiliconFlow =
+    const _isByteDance = modelConfig.providerName === ServiceProvider.ByteDance;
+    const _isAlibaba = modelConfig.providerName === ServiceProvider.Alibaba;
+    const _isMoonshot = modelConfig.providerName === ServiceProvider.Moonshot;
+    const _isIflytek = modelConfig.providerName === ServiceProvider.Iflytek;
+    const _isDeepSeek = modelConfig.providerName === ServiceProvider.DeepSeek;
+    const _isXAI = modelConfig.providerName === ServiceProvider.XAI;
+    const _isChatGLM = modelConfig.providerName === ServiceProvider.ChatGLM;
+    const _isSiliconFlow =
       modelConfig.providerName === ServiceProvider.SiliconFlow;
     const isEnabledAccessControl = accessStore.enabledAccessControl();
     const apiKey = isGoogle
@@ -267,21 +278,21 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       ? accessStore.azureApiKey
       : isAnthropic
       ? accessStore.anthropicApiKey
-      : isByteDance
+      : _isByteDance
       ? accessStore.bytedanceApiKey
-      : isAlibaba
+      : _isAlibaba
       ? accessStore.alibabaApiKey
-      : isMoonshot
+      : _isMoonshot
       ? accessStore.moonshotApiKey
-      : isXAI
+      : _isXAI
       ? accessStore.xaiApiKey
-      : isDeepSeek
+      : _isDeepSeek
       ? accessStore.deepseekApiKey
-      : isChatGLM
+      : _isChatGLM
       ? accessStore.chatglmApiKey
       : isSiliconFlow
       ? accessStore.siliconflowApiKey
-      : isIflytek
+      : _isIflytek
       ? accessStore.iflytekApiKey && accessStore.iflytekApiSecret
         ? accessStore.iflytekApiKey + ":" + accessStore.iflytekApiSecret
         : ""
@@ -291,14 +302,14 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       isAzure,
       isAnthropic,
       isBaidu,
-      isByteDance,
-      isAlibaba,
-      isMoonshot,
-      isIflytek,
-      isDeepSeek,
-      isXAI,
-      isChatGLM,
-      isSiliconFlow,
+      _isByteDance,
+      _isAlibaba,
+      _isMoonshot,
+      _isIflytek,
+      _isDeepSeek,
+      _isXAI,
+      _isChatGLM,
+      _isSiliconFlow,
       apiKey,
       isEnabledAccessControl,
     };
@@ -319,13 +330,13 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     isAzure,
     isAnthropic,
     isBaidu,
-    isByteDance,
-    isAlibaba,
-    isMoonshot,
-    isIflytek,
-    isDeepSeek,
-    isXAI,
-    isChatGLM,
+    _isByteDance,
+    _isAlibaba,
+    _isMoonshot,
+    _isIflytek,
+    _isDeepSeek,
+    _isXAI,
+    _isChatGLM,
     isSiliconFlow,
     apiKey,
     isEnabledAccessControl,

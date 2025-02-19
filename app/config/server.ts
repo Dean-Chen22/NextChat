@@ -2,6 +2,8 @@ import md5 from "spark-md5";
 import { DEFAULT_MODELS, DEFAULT_GA_ID } from "../constant";
 import { isGPT4Model } from "../utils/model";
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
@@ -12,6 +14,13 @@ declare global {
 
       BASE_URL?: string;
       OPENAI_ORG_ID?: string; // openai only
+
+      // Alibaba search parameters
+      ALIBABA_ENABLE_SEARCH?: string;
+      ALIBABA_ENABLE_SOURCE?: string;
+      ALIBABA_ENABLE_CITATION?: string;
+      ALIBABA_SEARCH_STRATEGY?: string;
+      ALIBABA_FORCED_SEARCH?: string;
 
       VERCEL?: string;
       BUILD_MODE?: "standalone" | "export";
@@ -135,7 +144,7 @@ export const getServerSideConfig = () => {
   const disableGPT4 = !!process.env.DISABLE_GPT4;
   let customModels = process.env.CUSTOM_MODELS ?? "";
   let defaultModel = process.env.DEFAULT_MODEL ?? "";
-  let visionModels = process.env.VISION_MODELS ?? "";
+  const visionModels = process.env.VISION_MODELS ?? "";
 
   if (disableGPT4) {
     if (customModels) customModels += ",";
@@ -210,6 +219,11 @@ export const getServerSideConfig = () => {
     isAlibaba,
     alibabaUrl: process.env.ALIBABA_URL,
     alibabaApiKey: getApiKey(process.env.ALIBABA_API_KEY),
+    alibabaEnableSearch: process.env.ALIBABA_ENABLE_SEARCH === "true",
+    alibabaEnableSource: process.env.ALIBABA_ENABLE_SOURCE === "true",
+    alibabaEnableCitation: process.env.ALIBABA_ENABLE_CITATION === "true",
+    alibabaSearchStrategy: process.env.ALIBABA_SEARCH_STRATEGY || "standard",
+    alibabaForcedSearch: process.env.ALIBABA_FORCED_SEARCH === "true",
 
     isTencent,
     tencentUrl: process.env.TENCENT_URL,
