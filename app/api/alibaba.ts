@@ -1,4 +1,3 @@
-import { getServerSideConfig } from "@/app/config/server";
 import { ModelProvider } from "@/app/constant";
 import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
@@ -22,8 +21,6 @@ interface AlibabaRequestBody {
   };
   search_options?: SearchOptions;
 }
-
-const serverConfig = getServerSideConfig();
 
 export async function handle(
   req: NextRequest,
