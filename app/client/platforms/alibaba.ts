@@ -78,7 +78,13 @@ export class QwenApi implements LLMApi {
   }
 
   extractMessage(res: any) {
-    return res?.output?.choices?.at(0)?.message?.content ?? "";
+    const message = res?.output?.choices?.at(0)?.message;
+    const content = message?.content ?? "";
+    const search_response = {
+      search_results: message?.search_results,
+      citations: message?.citations,
+    };
+    return { content, search_response };
   }
 
   speech(_options: SpeechOptions): Promise<ArrayBuffer> {
@@ -193,6 +199,8 @@ export class QwenApi implements LLMApi {
 
             const reasoning = choices[0]?.message?.reasoning_content;
             const content = choices[0]?.message?.content;
+            const search_results = choices[0]?.message?.search_results;
+            const citations = choices[0]?.message?.citations;
 
             // Skip if both content and reasoning_content are empty or null
             if (
@@ -202,6 +210,7 @@ export class QwenApi implements LLMApi {
               return {
                 isThinking: false,
                 content: "",
+                search_response: null,
               };
             }
 
@@ -209,17 +218,23 @@ export class QwenApi implements LLMApi {
               return {
                 isThinking: true,
                 content: reasoning,
+                search_response: null,
               };
             } else if (content && content.length > 0) {
               return {
                 isThinking: false,
                 content: content,
+                search_response: {
+                  search_results,
+                  citations,
+                },
               };
             }
 
             return {
               isThinking: false,
               content: "",
+              search_response: null,
             };
           },
           // processToolMessage, include tool_calls message and tool call results
@@ -242,8 +257,14 @@ export class QwenApi implements LLMApi {
         clearTimeout(requestTimeoutId);
 
         const resJson = await res.json();
-        const message = this.extractMessage(resJson);
-        options.onFinish(message, res);
+        const { content, search_response } = this.extractMessage(resJson);
+        const message = content;
+        if (search_response?.search_results || search_response?.citations) {
+          options.onUpdate?.(message, "");
+          options.onFinish(message, res);
+        } else {
+          options.onFinish(message, res);
+        }
       }
     } catch (e) {
       console.log("[Request] failed to make a chat request", e);
