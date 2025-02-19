@@ -68,6 +68,13 @@ export const FunctionToolService = {
         headers[headerName] = `Bearer ${openaiApiKey}`;
       }
     }
+    // Add Alibaba Search API key for web search plugin
+    if (!tokenValue && plugin.id === "alibaba-search") {
+      const alibabaSearchApiKey = useAccessStore.getState().alibabaSearchApiKey;
+      if (alibabaSearchApiKey) {
+        headers[headerName] = `Bearer ${alibabaSearchApiKey}`;
+      }
+    }
     const api = new OpenAPIClientAxios({
       definition: yaml.load(plugin.content) as any,
       axiosConfigDefaults: {
