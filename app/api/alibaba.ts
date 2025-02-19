@@ -1,13 +1,16 @@
 import { getServerSideConfig } from "@/app/config/server";
-import { ModelProvider, ServiceProvider } from "@/app/constant";
+import { ModelProvider } from "@/app/constant";
 import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/api/auth";
-import { isModelNotavailableInServer } from "@/app/utils/model";
 import { SearchOptions } from "@/app/client/api";
 
 interface AlibabaRequestBody {
   model?: string;
+  messages?: Array<{
+    role: string;
+    content: string;
+  }>;
   modelConfig?: {
     enableSearch?: boolean;
     searchOptions?: {
@@ -51,19 +54,50 @@ export async function handle(
 async function request(req: NextRequest) {
   const controller = new AbortController();
 
-  // alibaba use base url or just remove the path
+  // Use the DashScope API endpoint
   const baseUrl =
-    serverConfig.alibabaUrl ||
-    "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-
-  if (!baseUrl.startsWith("http")) {
-    baseUrl = `https://${baseUrl}`;
-  }
-
-  if (baseUrl.endsWith("/")) {
-    baseUrl = baseUrl.slice(0, -1);
-  }
+    "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
   console.log("[Base Url]", baseUrl);
+
+  // Transform request body to match DashScope API format
+  let requestBody = null;
+  if (req.body) {
+    try {
+      const clonedBody = await req.text();
+      const jsonBody = JSON.parse(clonedBody) as AlibabaRequestBody;
+
+      requestBody = {
+        model: "qwen-max",
+        input: {
+          messages: [
+            {
+              role: "user",
+              content: jsonBody.messages?.[0]?.content || "Hello",
+            },
+          ],
+        },
+        parameters: {
+          result_format: "message",
+          incremental_output: false,
+          temperature: 0.7,
+          top_p: 0.99,
+          enable_search: true,
+          search_options: {
+            search_strategy: "pro",
+            enable_citation: true,
+            enable_source: true,
+            forced_search: true,
+          },
+        },
+      };
+    } catch (e) {
+      console.error("[Alibaba] request processing", e);
+      return NextResponse.json(
+        { error: true, message: "Failed to process request body" },
+        { status: 400 },
+      );
+    }
+  }
 
   const timeoutId = setTimeout(
     () => {
@@ -71,6 +105,8 @@ async function request(req: NextRequest) {
     },
     10 * 60 * 1000,
   );
+
+  // Configure fetch options with request body
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": "application/json",
@@ -78,67 +114,46 @@ async function request(req: NextRequest) {
       "X-DashScope-SSE": req.headers.get("X-DashScope-SSE") ?? "disable",
     },
     method: req.method,
-    body: req.body,
+    body: requestBody ? JSON.stringify(requestBody) : undefined,
     redirect: "manual",
     // @ts-expect-error Fetch API duplex option
     duplex: "half",
     signal: controller.signal,
   };
 
-  // Handle request body and search parameters
+  // Transform request body to match DashScope API format
   if (req.body) {
     try {
       const clonedBody = await req.text();
       const jsonBody = JSON.parse(clonedBody) as AlibabaRequestBody;
 
-      // Add search parameters if enabled
-      if (
-        jsonBody.modelConfig?.enableSearch ||
-        serverConfig.alibabaEnableSearch
-      ) {
-        const strategy = (jsonBody.modelConfig?.searchOptions?.searchStrategy ||
-          serverConfig.alibabaSearchStrategy ||
-          "standard") as "standard" | "pro";
-        jsonBody.search_options = {
-          enable_source:
-            jsonBody.modelConfig?.searchOptions?.enableSource ||
-            serverConfig.alibabaEnableSource ||
-            false,
-          enable_citation:
-            jsonBody.modelConfig?.searchOptions?.enableCitation ||
-            serverConfig.alibabaEnableCitation ||
-            false,
-          search_strategy: strategy,
-          forced_search:
-            jsonBody.modelConfig?.searchOptions?.forcedSearch ||
-            serverConfig.alibabaForcedSearch ||
-            false,
-        };
-      }
-
-      // #1815 try to refuse some request to some models
-      if (serverConfig.customModels) {
-        if (
-          isModelNotavailableInServer(
-            serverConfig.customModels,
-            jsonBody?.model as string,
-            ServiceProvider.Alibaba as string,
-          )
-        ) {
-          return NextResponse.json(
+      const requestBody = {
+        model: "qwen-max",
+        input: {
+          messages: [
             {
-              error: true,
-              message: `you are not allowed to use ${jsonBody?.model} model`,
+              role: "user",
+              content: jsonBody.messages?.[0]?.content || "",
             },
-            {
-              status: 403,
-            },
-          );
-        }
-      }
+          ],
+        },
+        parameters: {
+          result_format: "message",
+          incremental_output: false,
+          temperature: 0.7,
+          top_p: 0.99,
+          enable_search: true,
+          search_options: {
+            search_strategy: "pro",
+            enable_citation: true,
+            enable_source: true,
+            forced_search: true,
+          },
+        },
+      };
 
-      // Update request body with modified JSON
-      fetchOptions.body = JSON.stringify(jsonBody);
+      // Update request body with DashScope format
+      fetchOptions.body = JSON.stringify(requestBody);
     } catch (e) {
       console.error(`[Alibaba] request processing`, e);
       return NextResponse.json(
@@ -148,7 +163,7 @@ async function request(req: NextRequest) {
     }
   }
   try {
-    const res = await fetch(fetchUrl, fetchOptions);
+    const res = await fetch(baseUrl, fetchOptions);
 
     // to prevent browser prompt for credentials
     const newHeaders = new Headers(res.headers);
