@@ -34,23 +34,28 @@ export interface OpenAIListModelResponse {
 
 interface RequestPayload extends SearchRequestPayload {
   model: string;
-  messages: {
-    role: "system" | "user" | "assistant";
-    content: string | MultimodalContent[];
-  }[];
-  stream?: boolean;
-  temperature: number;
-  top_p: number;
+  input: {
+    messages: {
+      role: "system" | "user" | "assistant";
+      content: string | MultimodalContent[];
+    }[];
+  };
+  parameters: {
+    result_format: string;
+    incremental_output: boolean;
+    temperature: number;
+    top_p: number;
+  };
   enable_search?: boolean;
 }
 
 export class QwenApi implements LLMApi {
   path(): string {
-    return "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+    return "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
   }
 
   extractMessage(res: any) {
-    return res?.output?.choices?.at(0)?.message?.content ?? "";
+    return res?.output?.text ?? "";
   }
 
   speech(_options: SpeechOptions): Promise<ArrayBuffer> {
@@ -75,12 +80,18 @@ export class QwenApi implements LLMApi {
     };
 
     const shouldStream = !!options.config.stream;
+    const modelName = modelConfig.model.replace("@Alibaba", "");
     const requestPayload: RequestPayload = {
-      model: modelConfig.model,
-      messages,
-      stream: shouldStream,
-      temperature: modelConfig.temperature,
-      top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p, // qwen top_p is should be < 1
+      model: modelName,
+      input: {
+        messages,
+      },
+      parameters: {
+        result_format: "message",
+        incremental_output: shouldStream,
+        temperature: modelConfig.temperature,
+        top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p,
+      },
       enable_search: modelConfig.enableSearch,
     };
 
@@ -91,6 +102,8 @@ export class QwenApi implements LLMApi {
       requestPayload.search_options = {
         search_strategy: strategy,
         enable_citation: modelConfig.searchOptions?.enableCitation ?? false,
+        enable_source: modelConfig.searchOptions?.enableSource ?? false,
+        forced_search: modelConfig.searchOptions?.forcedSearch ?? false,
       };
     }
 
