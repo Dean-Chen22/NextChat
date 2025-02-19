@@ -77,8 +77,6 @@ async function request(req: NextRequest) {
             jsonBody.modelConfig?.searchOptions?.enableCitation ?? true,
           enable_source:
             jsonBody.modelConfig?.searchOptions?.enableSource ?? true,
-          forced_search:
-            jsonBody.modelConfig?.searchOptions?.forcedSearch ?? true,
         },
       };
     } catch (e) {
