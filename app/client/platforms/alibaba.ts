@@ -49,14 +49,24 @@ interface RequestParam {
 }
 interface RequestPayload {
   model: string;
-  input: RequestInput;
-  parameters: RequestParam;
-  enable_search?: boolean;
-  search_options?: {
-    search_strategy: "standard" | "pro";
-    enable_citation: boolean;
-    enable_source: boolean;
-    forced_search: boolean;
+  input: {
+    messages: Array<{
+      role: string;
+      content: string;
+    }>;
+  };
+  parameters: {
+    result_format: "message";
+    incremental_output: boolean;
+    temperature: number;
+    top_p: number;
+    enable_search?: boolean;
+    search_options?: {
+      search_strategy: "standard" | "pro";
+      enable_citation: boolean;
+      enable_source: boolean;
+      forced_search: boolean;
+    };
   };
 }
 
