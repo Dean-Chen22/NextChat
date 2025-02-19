@@ -1,16 +1,26 @@
-import { getServerSideConfig } from "@/app/config/server";
-import {
-  ALIBABA_BASE_URL,
-  ApiPath,
-  ModelProvider,
-  ServiceProvider,
-} from "@/app/constant";
+import { ModelProvider } from "@/app/constant";
 import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/api/auth";
-import { isModelNotavailableInServer } from "@/app/utils/model";
+import { SearchOptions } from "@/app/client/api";
 
-const serverConfig = getServerSideConfig();
+interface AlibabaRequestBody {
+  model?: string;
+  messages?: Array<{
+    role: string;
+    content: string;
+  }>;
+  modelConfig?: {
+    enableSearch?: boolean;
+    searchOptions?: {
+      enableSource?: boolean;
+      enableCitation?: boolean;
+      searchStrategy?: string;
+      forcedSearch?: boolean;
+    };
+  };
+  search_options?: SearchOptions;
+}
 
 export async function handle(
   req: NextRequest,
@@ -41,21 +51,44 @@ export async function handle(
 async function request(req: NextRequest) {
   const controller = new AbortController();
 
-  // alibaba use base url or just remove the path
-  let path = `${req.nextUrl.pathname}`.replaceAll(ApiPath.Alibaba, "");
-
-  let baseUrl = serverConfig.alibabaUrl || ALIBABA_BASE_URL;
-
-  if (!baseUrl.startsWith("http")) {
-    baseUrl = `https://${baseUrl}`;
-  }
-
-  if (baseUrl.endsWith("/")) {
-    baseUrl = baseUrl.slice(0, -1);
-  }
-
-  console.log("[Proxy] ", path);
+  // Use the DashScope compatible-mode API endpoint
+  const baseUrl =
+    "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
   console.log("[Base Url]", baseUrl);
+
+  // Transform request body to match DashScope API format
+  let requestBody = null;
+  if (req.body) {
+    try {
+      const clonedBody = await req.text();
+      const jsonBody = JSON.parse(clonedBody) as AlibabaRequestBody;
+
+      requestBody = {
+        model: jsonBody.model || "qwen-max",
+        messages: jsonBody.messages || [],
+        stream: req.headers.get("X-DashScope-SSE") === "enable",
+        temperature: 0.7,
+        top_p: 0.99,
+        enable_search: jsonBody.modelConfig?.enableSearch ?? true,
+        search_options: {
+          search_strategy:
+            jsonBody.modelConfig?.searchOptions?.searchStrategy ?? "pro",
+          enable_citation:
+            jsonBody.modelConfig?.searchOptions?.enableCitation ?? true,
+          enable_source:
+            jsonBody.modelConfig?.searchOptions?.enableSource ?? true,
+          forced_search:
+            jsonBody.modelConfig?.searchOptions?.forcedSearch ?? true,
+        },
+      };
+    } catch (e) {
+      console.error("[Alibaba] request processing", e);
+      return NextResponse.json(
+        { error: true, message: "Failed to process request body" },
+        { status: 400 },
+      );
+    }
+  }
 
   const timeoutId = setTimeout(
     () => {
@@ -64,7 +97,7 @@ async function request(req: NextRequest) {
     10 * 60 * 1000,
   );
 
-  const fetchUrl = `${baseUrl}${path}`;
+  // Configure fetch options with request body
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": "application/json",
@@ -72,45 +105,16 @@ async function request(req: NextRequest) {
       "X-DashScope-SSE": req.headers.get("X-DashScope-SSE") ?? "disable",
     },
     method: req.method,
-    body: req.body,
+    body: requestBody ? JSON.stringify(requestBody) : undefined,
     redirect: "manual",
-    // @ts-ignore
+    // @ts-expect-error Fetch API duplex option
     duplex: "half",
     signal: controller.signal,
   };
 
-  // #1815 try to refuse some request to some models
-  if (serverConfig.customModels && req.body) {
-    try {
-      const clonedBody = await req.text();
-      fetchOptions.body = clonedBody;
-
-      const jsonBody = JSON.parse(clonedBody) as { model?: string };
-
-      // not undefined and is false
-      if (
-        isModelNotavailableInServer(
-          serverConfig.customModels,
-          jsonBody?.model as string,
-          ServiceProvider.Alibaba as string,
-        )
-      ) {
-        return NextResponse.json(
-          {
-            error: true,
-            message: `you are not allowed to use ${jsonBody?.model} model`,
-          },
-          {
-            status: 403,
-          },
-        );
-      }
-    } catch (e) {
-      console.error(`[Alibaba] filter`, e);
-    }
-  }
+  // Request body has already been transformed above
   try {
-    const res = await fetch(fetchUrl, fetchOptions);
+    const res = await fetch(baseUrl, fetchOptions);
 
     // to prevent browser prompt for credentials
     const newHeaders = new Headers(res.headers);
@@ -123,6 +127,12 @@ async function request(req: NextRequest) {
       statusText: res.statusText,
       headers: newHeaders,
     });
+  } catch (e) {
+    console.error(`[Alibaba] fetch error:`, e);
+    return NextResponse.json(
+      { error: true, message: "Failed to fetch from Alibaba API" },
+      { status: 500 },
+    );
   } finally {
     clearTimeout(timeoutId);
   }

@@ -85,7 +85,7 @@ const cn = {
     Rename: "重命名对话",
     Typing: "正在输入…",
     Input: (submitKey: string) => {
-      var inputHints = `${submitKey} 发送`;
+      let inputHints = `${submitKey} 发送`;
       if (submitKey === String(SubmitKey.Enter)) {
         inputHints += "，Shift + Enter 换行";
       }
@@ -541,6 +541,28 @@ const cn = {
     },
 
     Model: "模型 (model)",
+    Search: {
+      Enable: {
+        Title: "启用搜索",
+        SubTitle: "启用互联网搜索功能",
+      },
+      Source: {
+        Title: "显示来源",
+        SubTitle: "在结果中显示搜索来源",
+      },
+      Citation: {
+        Title: "启用引用",
+        SubTitle: "使用[1]或[ref_1]样式显示引用",
+      },
+      Strategy: {
+        Title: "搜索策略",
+        SubTitle: "控制搜索质量（Pro模式检索更多互联网信息）",
+      },
+      ForcedSearch: {
+        Title: "强制搜索",
+        SubTitle: "强制每个请求启用搜索",
+      },
+    },
     CompressModel: {
       Title: "对话摘要模型",
       SubTitle: "用于压缩历史记录、生成对话标题的模型",
@@ -625,8 +647,10 @@ const cn = {
     Error: "出错了，稍后重试吧",
     Prompt: {
       History: (content: string) => "这是历史聊天总结作为前情提要：" + content,
-      Topic: "使用四到五个字直接返回这句话的简要主题，不要解释、不要标点、不要语气词、不要多余文本，不要加粗，如果没有主题，请直接返回\"闲聊\"",
-      Summarize: "简要总结一下对话内容，用作后续的上下文提示 prompt，控制在 200 字以内"
+      Topic:
+        '使用四到五个字直接返回这句话的简要主题，不要解释、不要标点、不要语气词、不要多余文本，不要加粗，如果没有主题，请直接返回"闲聊"',
+      Summarize:
+        "简要总结一下对话内容，用作后续的上下文提示 prompt，控制在 200 字以内",
     },
   },
   Copy: {

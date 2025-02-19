@@ -81,6 +81,14 @@ export const DEFAULT_CONFIG = {
     size: "1024x1024" as ModelSize,
     quality: "standard" as DalleQuality,
     style: "vivid" as DalleStyle,
+    // Alibaba search parameters
+    enableSearch: false,
+    searchOptions: {
+      enableSource: false,
+      enableCitation: false,
+      searchStrategy: "standard" as "standard" | "pro",
+      forcedSearch: false,
+    },
   },
 
   ttsConfig: {
@@ -107,6 +115,13 @@ export const DEFAULT_CONFIG = {
 };
 
 export type ChatConfig = typeof DEFAULT_CONFIG;
+
+export type SearchOptions = {
+  enableSource: boolean;
+  enableCitation: boolean;
+  searchStrategy: "standard" | "pro";
+  forcedSearch: boolean;
+};
 
 export type ModelConfig = ChatConfig["modelConfig"];
 export type TTSConfig = ChatConfig["ttsConfig"];
@@ -137,6 +152,12 @@ export const TTSConfigValidator = {
   },
   speed(x: number) {
     return limitNumber(x, 0.25, 4.0, 1.0);
+  },
+};
+
+export const SearchConfigValidator = {
+  searchStrategy(x: string) {
+    return x === "pro" ? "pro" : "standard";
   },
 };
 

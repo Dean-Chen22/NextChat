@@ -1,7 +1,8 @@
 "use client";
 import { ApiPath, Alibaba, ALIBABA_BASE_URL } from "@/app/constant";
+import { useAccessStore } from "@/app/store";
+import { getClientConfig } from "@/app/config/client";
 import {
-  useAccessStore,
   useAppConfig,
   useChatStore,
   ChatMessageTool,
@@ -14,9 +15,7 @@ import {
   LLMApi,
   LLMModel,
   SpeechOptions,
-  MultimodalContent,
 } from "../api";
-import { getClientConfig } from "@/app/config/client";
 import {
   getMessageTextContent,
   getMessageTextContentWithoutThinking,
@@ -33,24 +32,22 @@ export interface OpenAIListModelResponse {
   }>;
 }
 
-interface RequestInput {
-  messages: {
-    role: "system" | "user" | "assistant";
-    content: string | MultimodalContent[];
-  }[];
-}
-interface RequestParam {
-  result_format: string;
-  incremental_output?: boolean;
-  temperature: number;
-  repetition_penalty?: number;
-  top_p: number;
-  max_tokens?: number;
-}
 interface RequestPayload {
   model: string;
-  input: RequestInput;
-  parameters: RequestParam;
+  messages: Array<{
+    role: string;
+    content: string;
+  }>;
+  stream: boolean;
+  temperature: number;
+  top_p: number;
+  enable_search?: boolean;
+  search_options?: {
+    search_strategy: "standard" | "pro";
+    enable_citation: boolean;
+    enable_source: boolean;
+    forced_search: boolean;
+  };
 }
 
 export class QwenApi implements LLMApi {
@@ -84,7 +81,7 @@ export class QwenApi implements LLMApi {
     return res?.output?.choices?.at(0)?.message?.content ?? "";
   }
 
-  speech(options: SpeechOptions): Promise<ArrayBuffer> {
+  speech(_options: SpeechOptions): Promise<ArrayBuffer> {
     throw new Error("Method not implemented.");
   }
 
@@ -106,19 +103,23 @@ export class QwenApi implements LLMApi {
     };
 
     const shouldStream = !!options.config.stream;
-    const requestPayload: RequestPayload = {
+    const requestPayload = {
       model: modelConfig.model,
-      input: {
-        messages,
-      },
-      parameters: {
-        result_format: "message",
-        incremental_output: shouldStream,
-        temperature: modelConfig.temperature,
-        // max_tokens: modelConfig.max_tokens,
-        top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p, // qwen top_p is should be < 1
+      messages,
+      stream: shouldStream,
+      temperature: modelConfig.temperature,
+      top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p,
+      enable_search: modelConfig.enableSearch,
+      search_options: {
+        search_strategy: modelConfig.searchOptions?.searchStrategy ?? "pro",
+        enable_citation: modelConfig.searchOptions?.enableCitation ?? true,
+        enable_source: modelConfig.searchOptions?.enableSource ?? true,
+        forced_search: modelConfig.searchOptions?.forcedSearch ?? true,
       },
     };
+
+    // Search parameters are already included in the root level
+    // No need for additional configuration since we set it above
 
     const controller = new AbortController();
     options.onController?.(controller);
@@ -185,7 +186,7 @@ export class QwenApi implements LLMApi {
                   },
                 });
               } else {
-                // @ts-ignore
+                // @ts-expect-error Dynamic property access for function arguments
                 runTools[index]["function"]["arguments"] += args;
               }
             }
@@ -227,8 +228,8 @@ export class QwenApi implements LLMApi {
             toolCallMessage: any,
             toolCallResult: any[],
           ) => {
-            requestPayload?.input?.messages?.splice(
-              requestPayload?.input?.messages?.length,
+            requestPayload?.messages?.splice(
+              requestPayload?.messages?.length,
               0,
               toolCallMessage,
               ...toolCallResult,
