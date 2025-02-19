@@ -15,7 +15,6 @@ import {
   LLMApi,
   LLMModel,
   SpeechOptions,
-  MultimodalContent,
 } from "../api";
 import {
   getMessageTextContent,
@@ -33,20 +32,6 @@ export interface OpenAIListModelResponse {
   }>;
 }
 
-interface RequestInput {
-  messages: {
-    role: "system" | "user" | "assistant";
-    content: string | MultimodalContent[];
-  }[];
-}
-interface RequestParam {
-  result_format: string;
-  incremental_output?: boolean;
-  temperature: number;
-  repetition_penalty?: number;
-  top_p: number;
-  max_tokens?: number;
-}
 interface RequestPayload {
   model: string;
   input: {
