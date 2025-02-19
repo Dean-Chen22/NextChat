@@ -40,9 +40,23 @@ export interface MultimodalContent {
   };
 }
 
+export interface SearchResult {
+  site_name: string;
+  icon: string;
+  index: number;
+  title: string;
+  url: string;
+}
+
+export interface SearchResponse {
+  search_results?: SearchResult[];
+  citations?: string[];
+}
+
 export interface RequestMessage {
   role: MessageRole;
   content: string | MultimodalContent[];
+  search_response?: SearchResponse;
 }
 
 export interface LLMConfig {

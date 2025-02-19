@@ -11,6 +11,7 @@ import type {
   ClientApi,
   MultimodalContent,
   RequestMessage,
+  SearchResponse,
 } from "../client/api";
 import { getClientApi } from "../client/api";
 import { ChatControllerPool } from "../client/controller";
@@ -63,6 +64,7 @@ export type ChatMessage = RequestMessage & {
   tools?: ChatMessageTool[];
   audio_url?: string;
   isMcpResponse?: boolean;
+  search_response?: SearchResponse;
 };
 
 export function createMessage(override: Partial<ChatMessage>): ChatMessage {
@@ -164,7 +166,7 @@ function fillTemplateWith(input: string, modelConfig: ModelConfig) {
   // Find the model in the DEFAULT_MODELS array that matches the modelConfig.model
   const modelInfo = DEFAULT_MODELS.find((m) => m.name === modelConfig.model);
 
-  var serviceProvider = "OpenAI";
+  let serviceProvider = "OpenAI";
   if (modelInfo) {
     // TODO: auto detect the providerName from the modelConfig.model
 
@@ -427,7 +429,7 @@ export const useChatStore = createPersistStore(
           ];
         }
 
-        let userMessage: ChatMessage = createMessage({
+        const userMessage: ChatMessage = createMessage({
           role: "user",
           content: mContent,
           isMcpResponse,
@@ -558,7 +560,7 @@ export const useChatStore = createPersistStore(
         const mcpEnabled = await isMcpEnabled();
         const mcpSystemPrompt = mcpEnabled ? await getMcpSystemPrompt() : "";
 
-        var systemPrompts: ChatMessage[] = [];
+        let systemPrompts: ChatMessage[] = [];
 
         if (shouldInjectSystemPrompts) {
           systemPrompts = [
