@@ -98,6 +98,7 @@ import {
   showPrompt,
   showToast,
 } from "./ui-lib";
+import Image from "next/image";
 import { useNavigate } from "react-router-dom";
 import {
   CHAT_PAGE_SIZE,
@@ -582,7 +583,7 @@ export function ChatActions(props: {
     const isUnavailableModel = !models.some((m) => m.name === currentModel);
     if (isUnavailableModel && models.length > 0) {
       // show next model to default model if exist
-      let nextModel = models.find((model) => model.isDefault) || models[0];
+      const nextModel = models.find((model) => model.isDefault) || models[0];
       chatStore.updateTargetSession(session, (session) => {
         session.mask.modelConfig.model = nextModel.name;
         session.mask.modelConfig.providerName = nextModel?.provider
@@ -1096,7 +1097,7 @@ function _Chat() {
     } else if (!config.disablePromptHint && n < SEARCH_TEXT_LIMIT) {
       // check if need to trigger auto completion
       if (text.startsWith("/")) {
-        let searchText = text.slice(1);
+        const searchText = text.slice(1);
         onSearch(searchText);
       }
     }
@@ -1191,7 +1192,7 @@ function _Chat() {
       e.preventDefault();
     }
   };
-  const onRightClick = (e: any, message: ChatMessage) => {
+  const _onRightClick = (e: any, message: ChatMessage) => {
     // copy to clipboard
     if (selectOrCopy(e.currentTarget, getMessageTextContent(message))) {
       if (userInput.length === 0) {
@@ -1285,21 +1286,19 @@ function _Chat() {
 
   const accessStore = useAccessStore();
   const [speechStatus, setSpeechStatus] = useState(false);
-  const [speechLoading, setSpeechLoading] = useState(false);
+  const [_speechLoading, setSpeechLoading] = useState(false);
 
   async function openaiSpeech(text: string) {
     if (speechStatus) {
       ttsPlayer.stop();
       setSpeechStatus(false);
     } else {
-      var api: ClientApi;
-      api = new ClientApi(ModelProvider.GPT);
+      const api = new ClientApi(ModelProvider.GPT);
       const config = useAppConfig.getState();
       setSpeechLoading(true);
       ttsPlayer.init();
       let audioBuffer: ArrayBuffer;
-      const { markdownToTxt } = require("markdown-to-txt");
-      const textContent = markdownToTxt(text);
+      const textContent = text;
       if (config.ttsConfig.engine !== DEFAULT_TTS_ENGINE) {
         const edgeVoiceName = accessStore.edgeVoiceName();
         const tts = new MsEdgeTTS();
@@ -1945,7 +1944,7 @@ function _Chat() {
                               {Locale.Chat.Typing}
                             </div>
                           )}
-                          {/*@ts-ignore*/}
+                          {/* @ts-expect-error Tool calls are dynamically typed */}
                           {message?.tools?.length > 0 && (
                             <div className={styles["chat-message-tools"]}>
                               {message?.tools?.map((tool) => (
@@ -1975,7 +1974,7 @@ function _Chat() {
                                 message.content.length === 0 &&
                                 !isUser
                               }
-                              //   onContextMenu={(e) => onRightClick(e, message)} // hard to use
+                              //   onContextMenu={(e) => _onRightClick(e, message)} // hard to use
                               onDoubleClickCapture={() => {
                                 if (!isMobileScreen) return;
                                 setUserInput(getMessageTextContent(message));
@@ -1985,11 +1984,47 @@ function _Chat() {
                               parentRef={scrollRef}
                               defaultShow={i >= messages.length - 6}
                             />
+                            {message.search_response?.search_results && (
+                              <div className={styles["chat-message-sources"]}>
+                                <div
+                                  className={
+                                    styles["chat-message-sources-title"]
+                                  }
+                                >
+                                  Sources:
+                                </div>
+                                {message.search_response.search_results.map(
+                                  (source, index) => (
+                                    <div
+                                      key={index}
+                                      className={styles["chat-message-source"]}
+                                    >
+                                      <span
+                                        className={
+                                          styles["chat-message-source-index"]
+                                        }
+                                      >
+                                        [{source.index}]
+                                      </span>
+                                      <a
+                                        href={source.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        {source.title}
+                                      </a>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            )}
                             {getMessageImages(message).length == 1 && (
-                              <img
+                              <Image
                                 className={styles["chat-message-item-image"]}
                                 src={getMessageImages(message)[0]}
                                 alt=""
+                                width={400}
+                                height={300}
                               />
                             )}
                             {getMessageImages(message).length > 1 && (
@@ -2005,7 +2040,7 @@ function _Chat() {
                                 {getMessageImages(message).map(
                                   (image, index) => {
                                     return (
-                                      <img
+                                      <Image
                                         className={
                                           styles[
                                             "chat-message-item-image-multi"
@@ -2014,6 +2049,8 @@ function _Chat() {
                                         key={index}
                                         src={image}
                                         alt=""
+                                        width={400}
+                                        height={300}
                                       />
                                     );
                                   },

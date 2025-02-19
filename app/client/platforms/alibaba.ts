@@ -150,7 +150,7 @@ export class QwenApi implements LLMApi {
       stream: shouldStream,
       temperature: modelConfig.temperature,
       top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p,
-      enable_search: modelConfig.enableSearch,
+      enable_search: modelConfig.enableSearch ?? true,
       search_options: {
         search_strategy: modelConfig.searchOptions?.searchStrategy ?? "pro",
         enable_citation: modelConfig.searchOptions?.enableCitation ?? true,
