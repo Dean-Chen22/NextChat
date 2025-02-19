@@ -13,6 +13,7 @@ import { VISION_MODEL_REGEXES, EXCLUDE_VISION_MODEL_REGEXES } from "./constant";
 import { useAccessStore } from "./store";
 import { ModelSize } from "./typing";
 
+// Added a simple comment for testing PR workflow
 export function trimTopic(topic: string) {
   // Fix an issue where double quotes still show in the Indonesian language
   // This will remove the specified punctuation from the end of the string
@@ -226,7 +227,7 @@ export function getCSSVar(varName: string) {
  */
 export function isMacOS(): boolean {
   if (typeof window !== "undefined") {
-    let userAgent = window.navigator.userAgent.toLocaleLowerCase();
+    const userAgent = window.navigator.userAgent.toLocaleLowerCase();
     const macintosh = /iphone|ipad|ipod|macintosh/.test(userAgent);
     return !!macintosh;
   }
