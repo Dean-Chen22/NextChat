@@ -217,7 +217,9 @@ export const getServerSideConfig = () => {
     bytedanceUrl: process.env.BYTEDANCE_URL,
 
     isAlibaba,
-    alibabaUrl: process.env.ALIBABA_URL,
+    alibabaUrl:
+      process.env.ALIBABA_URL ||
+      "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation",
     alibabaApiKey: getApiKey(process.env.ALIBABA_API_KEY),
     alibabaEnableSearch: process.env.ALIBABA_ENABLE_SEARCH === "true",
     alibabaEnableSource: process.env.ALIBABA_ENABLE_SOURCE === "true",
