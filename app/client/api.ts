@@ -305,7 +305,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       ? accessStore.deepseekApiKey
       : _isChatGLM
       ? accessStore.chatglmApiKey
-      : isSiliconFlow
+      : _isSiliconFlow
       ? accessStore.siliconflowApiKey
       : _isIflytek
       ? accessStore.iflytekApiKey && accessStore.iflytekApiSecret
