@@ -256,7 +256,22 @@ export function getHeaders(ignoreHeaders: boolean = false) {
 
   const clientConfig = getClientConfig();
 
-  function getConfig() {
+  function getConfig(): {
+    isGoogle: boolean;
+    isAzure: boolean;
+    isAnthropic: boolean;
+    isBaidu: boolean;
+    _isByteDance: boolean;
+    _isAlibaba: boolean;
+    _isMoonshot: boolean;
+    _isIflytek: boolean;
+    _isDeepSeek: boolean;
+    _isXAI: boolean;
+    _isChatGLM: boolean;
+    _isSiliconFlow: boolean;
+    apiKey: string;
+    isEnabledAccessControl: boolean;
+  } {
     const modelConfig = chatStore.currentSession().mask.modelConfig;
     const isGoogle = modelConfig.providerName === ServiceProvider.Google;
     const isAzure = modelConfig.providerName === ServiceProvider.Azure;
@@ -272,7 +287,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     const _isSiliconFlow =
       modelConfig.providerName === ServiceProvider.SiliconFlow;
     const isEnabledAccessControl = accessStore.enabledAccessControl();
-    const apiKey = isGoogle
+    const apiKey: string = isGoogle
       ? accessStore.googleApiKey
       : isAzure
       ? accessStore.azureApiKey
