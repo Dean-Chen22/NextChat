@@ -104,11 +104,13 @@ export class QwenApi implements LLMApi {
   extractMessage(res: any) {
     const message = res?.output?.choices?.at(0)?.message;
     const content = message?.content ?? "";
-    const search_response = message?.search_response ?? {
-      search_results: message?.search_results,
-      citations: message?.citations,
-    };
-    return { content, search_response };
+    if (message?.search_results || message?.citations) {
+      content += ` [${Array.from(
+        { length: message?.search_results?.length || 0 },
+        (_, i) => i + 1,
+      ).join("][")}]`;
+    }
+    return { content };
   }
 
   speech(_options: SpeechOptions): Promise<ArrayBuffer> {
@@ -278,8 +280,7 @@ export class QwenApi implements LLMApi {
 
         const resJson = await res.json();
         const { content, search_response } = this.extractMessage(resJson);
-        const message = { content, search_response };
-        options.onFinish(content, res, message);
+        options.onFinish(content, res);
       }
     } catch (e) {
       console.log("[Request] failed to make a chat request", e);
