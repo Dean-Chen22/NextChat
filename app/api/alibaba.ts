@@ -54,7 +54,6 @@ async function request(req: NextRequest) {
   // Use the DashScope compatible-mode API endpoint
   const baseUrl =
     "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-  console.log("[Base Url]", baseUrl);
 
   // Transform request body to match DashScope API format
   let requestBody = null;
