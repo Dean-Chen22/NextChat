@@ -1681,7 +1681,6 @@ function _Chat() {
     session,
     inputRef,
     setShowShortcutKeyModal,
-    getMessageTextContent,
   ]);
 
   const [showChatSidePanel, setShowChatSidePanel] = useState(false);
