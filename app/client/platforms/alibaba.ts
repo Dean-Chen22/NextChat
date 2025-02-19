@@ -1,5 +1,7 @@
 "use client";
-import { Alibaba } from "@/app/constant";
+import { ApiPath, Alibaba, ALIBABA_BASE_URL } from "@/app/constant";
+import { useAccessStore } from "@/app/store";
+import { getClientConfig } from "@/app/config/client";
 import {
   useAppConfig,
   useChatStore,
@@ -50,12 +52,34 @@ interface RequestPayload extends SearchRequestPayload {
 }
 
 export class QwenApi implements LLMApi {
-  path(): string {
-    return "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+  path(path: string): string {
+    const accessStore = useAccessStore.getState();
+
+    let baseUrl = "";
+
+    if (accessStore.useCustomConfig) {
+      baseUrl = accessStore.alibabaUrl;
+    }
+
+    if (baseUrl.length === 0) {
+      const isApp = !!getClientConfig()?.isApp;
+      baseUrl = isApp ? ALIBABA_BASE_URL : ApiPath.Alibaba;
+    }
+
+    if (baseUrl.endsWith("/")) {
+      baseUrl = baseUrl.slice(0, baseUrl.length - 1);
+    }
+    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.Alibaba)) {
+      baseUrl = "https://" + baseUrl;
+    }
+
+    console.log("[Proxy Endpoint] ", baseUrl, path);
+
+    return [baseUrl, path].join("/");
   }
 
   extractMessage(res: any) {
-    return res?.output?.text ?? "";
+    return res?.output?.choices?.at(0)?.message?.content ?? "";
   }
 
   speech(_options: SpeechOptions): Promise<ArrayBuffer> {
@@ -116,7 +140,7 @@ export class QwenApi implements LLMApi {
         "X-DashScope-SSE": shouldStream ? "enable" : "disable",
       };
 
-      const chatPath = this.path();
+      const chatPath = this.path(Alibaba.ChatPath);
       const chatPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
