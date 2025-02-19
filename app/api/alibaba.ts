@@ -51,9 +51,9 @@ export async function handle(
 async function request(req: NextRequest) {
   const controller = new AbortController();
 
-  // Use the DashScope API endpoint
+  // Use the DashScope compatible-mode API endpoint
   const baseUrl =
-    "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+    "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
   console.log("[Base Url]", baseUrl);
 
   // Transform request body to match DashScope API format
@@ -65,25 +65,20 @@ async function request(req: NextRequest) {
 
       requestBody = {
         model: jsonBody.model || "qwen-max",
-        input: {
-          messages: jsonBody.messages || [],
-        },
-        parameters: {
-          result_format: "message",
-          incremental_output: req.headers.get("X-DashScope-SSE") === "enable",
-          temperature: 0.7,
-          top_p: 0.99,
-          enable_search: jsonBody.modelConfig?.enableSearch ?? true,
-          search_options: {
-            search_strategy:
-              jsonBody.modelConfig?.searchOptions?.searchStrategy ?? "pro",
-            enable_citation:
-              jsonBody.modelConfig?.searchOptions?.enableCitation ?? true,
-            enable_source:
-              jsonBody.modelConfig?.searchOptions?.enableSource ?? true,
-            forced_search:
-              jsonBody.modelConfig?.searchOptions?.forcedSearch ?? true,
-          },
+        messages: jsonBody.messages || [],
+        stream: req.headers.get("X-DashScope-SSE") === "enable",
+        temperature: 0.7,
+        top_p: 0.99,
+        enable_search: jsonBody.modelConfig?.enableSearch ?? true,
+        search_options: {
+          search_strategy:
+            jsonBody.modelConfig?.searchOptions?.searchStrategy ?? "pro",
+          enable_citation:
+            jsonBody.modelConfig?.searchOptions?.enableCitation ?? true,
+          enable_source:
+            jsonBody.modelConfig?.searchOptions?.enableSource ?? true,
+          forced_search:
+            jsonBody.modelConfig?.searchOptions?.forcedSearch ?? true,
         },
       };
     } catch (e) {

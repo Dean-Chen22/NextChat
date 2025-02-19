@@ -34,24 +34,19 @@ export interface OpenAIListModelResponse {
 
 interface RequestPayload {
   model: string;
-  input: {
-    messages: Array<{
-      role: string;
-      content: string;
-    }>;
-  };
-  parameters: {
-    result_format: "message";
-    incremental_output: boolean;
-    temperature: number;
-    top_p: number;
-    enable_search?: boolean;
-    search_options?: {
-      search_strategy: "standard" | "pro";
-      enable_citation: boolean;
-      enable_source: boolean;
-      forced_search: boolean;
-    };
+  messages: Array<{
+    role: string;
+    content: string;
+  }>;
+  stream: boolean;
+  temperature: number;
+  top_p: number;
+  enable_search?: boolean;
+  search_options?: {
+    search_strategy: "standard" | "pro";
+    enable_citation: boolean;
+    enable_source: boolean;
+    forced_search: boolean;
   };
 }
 
@@ -108,31 +103,23 @@ export class QwenApi implements LLMApi {
     };
 
     const shouldStream = !!options.config.stream;
-    const requestPayload: RequestPayload = {
+    const requestPayload = {
       model: modelConfig.model,
-      input: {
-        messages,
-      },
-      parameters: {
-        result_format: "message",
-        incremental_output: shouldStream,
-        temperature: modelConfig.temperature,
-        top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p,
-        enable_search: modelConfig.enableSearch,
+      messages,
+      stream: shouldStream,
+      temperature: modelConfig.temperature,
+      top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p,
+      enable_search: modelConfig.enableSearch,
+      search_options: {
+        search_strategy: modelConfig.searchOptions?.searchStrategy ?? "pro",
+        enable_citation: modelConfig.searchOptions?.enableCitation ?? true,
+        enable_source: modelConfig.searchOptions?.enableSource ?? true,
+        forced_search: modelConfig.searchOptions?.forcedSearch ?? true,
       },
     };
 
-    // Add search parameters if enabled
-    if (modelConfig.enableSearch) {
-      const strategy = (modelConfig.searchOptions?.searchStrategy ??
-        "standard") as "standard" | "pro";
-      requestPayload.parameters.search_options = {
-        search_strategy: strategy,
-        enable_citation: modelConfig.searchOptions?.enableCitation ?? false,
-        enable_source: modelConfig.searchOptions?.enableSource ?? false,
-        forced_search: modelConfig.searchOptions?.forcedSearch ?? false,
-      };
-    }
+    // Search parameters are already included in the root level
+    // No need for additional configuration since we set it above
 
     const controller = new AbortController();
     options.onController?.(controller);
@@ -241,8 +228,8 @@ export class QwenApi implements LLMApi {
             toolCallMessage: any,
             toolCallResult: any[],
           ) => {
-            requestPayload?.input?.messages?.splice(
-              requestPayload?.input?.messages?.length,
+            requestPayload?.messages?.splice(
+              requestPayload?.messages?.length,
               0,
               toolCallMessage,
               ...toolCallResult,
