@@ -86,7 +86,7 @@ const en: LocaleType = {
     Rename: "Rename Chat",
     Typing: "Typing…",
     Input: (submitKey: string) => {
-      var inputHints = `${submitKey} to send`;
+      let inputHints = `${submitKey} to send`;
       if (submitKey === String(SubmitKey.Enter)) {
         inputHints += ", Shift + Enter to wrap";
       }
@@ -195,6 +195,11 @@ const en: LocaleType = {
     InjectSystemPrompts: {
       Title: "Inject System Prompts",
       SubTitle: "Inject a global system prompt for every request",
+    },
+    EnableSearch: {
+      Title: "Enable Internet Search",
+      SubTitle:
+        "Allow the model to search the internet for up-to-date information",
     },
     InputTemplate: {
       Title: "Input Template",
