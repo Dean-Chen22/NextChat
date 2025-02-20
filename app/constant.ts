@@ -222,7 +222,7 @@ export const ByteDance = {
 export const Alibaba = {
   ExampleEndpoint: ALIBABA_BASE_URL,
   ChatPath: "v1/services/aigc/text-generation/generation",
-  SearchPath: "v1/search",
+  SearchPath: "v1/services/opensearch/search",
 };
 
 export const Tencent = {

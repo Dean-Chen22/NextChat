@@ -158,6 +158,7 @@ export class QwenApi implements LLMApi {
       };
 
       const chatPath = `${ALIBABA_BASE_URL}/${Alibaba.ChatPath}`;
+      const searchPath = `${ALIBABA_BASE_URL}/${Alibaba.SearchPath}`;
       const chatPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
