@@ -160,13 +160,13 @@ export class QwenApi implements LLMApi {
       const chatPath = `${ALIBABA_BASE_URL}/${Alibaba.ChatPath}`;
       const searchPath = `${ALIBABA_BASE_URL}/${Alibaba.SearchPath}`;
       const chatPayload = {
-        headers: {
-          "X-DashScope-Search-API-Key": modelConfig.alibabaApiKey,
-        },
         method: "POST",
         body: JSON.stringify(requestPayload),
         signal: controller.signal,
-        headers: headers,
+        headers: {
+          ...headers,
+          "X-DashScope-Search-API-Key": useAccessStore.getState().alibabaApiKey,
+        },
       };
 
       // make a fetch request
