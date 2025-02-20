@@ -85,7 +85,7 @@ const cn = {
     Rename: "重命名对话",
     Typing: "正在输入…",
     Input: (submitKey: string) => {
-      var inputHints = `${submitKey} 发送`;
+      let inputHints = `${submitKey} 发送`;
       if (submitKey === String(SubmitKey.Enter)) {
         inputHints += "，Shift + Enter 换行";
       }
@@ -193,6 +193,10 @@ const cn = {
     InjectSystemPrompts: {
       Title: "注入系统级提示信息",
       SubTitle: "强制给每次请求的消息列表开头添加一个模拟 ChatGPT 的系统提示",
+    },
+    EnableSearch: {
+      Title: "启用网络搜索",
+      SubTitle: "允许模型搜索互联网获取最新信息",
     },
     InputTemplate: {
       Title: "用户输入预处理",
@@ -625,8 +629,10 @@ const cn = {
     Error: "出错了，稍后重试吧",
     Prompt: {
       History: (content: string) => "这是历史聊天总结作为前情提要：" + content,
-      Topic: "使用四到五个字直接返回这句话的简要主题，不要解释、不要标点、不要语气词、不要多余文本，不要加粗，如果没有主题，请直接返回\"闲聊\"",
-      Summarize: "简要总结一下对话内容，用作后续的上下文提示 prompt，控制在 200 字以内"
+      Topic:
+        '使用四到五个字直接返回这句话的简要主题，不要解释、不要标点、不要语气词、不要多余文本，不要加粗，如果没有主题，请直接返回"闲聊"',
+      Summarize:
+        "简要总结一下对话内容，用作后续的上下文提示 prompt，控制在 200 字以内",
     },
   },
   Copy: {

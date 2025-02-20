@@ -175,6 +175,22 @@ export function ModelConfigList(props: {
           </ListItem>
 
           <ListItem
+            title={Locale.Settings.EnableSearch.Title}
+            subTitle={Locale.Settings.EnableSearch.SubTitle}
+          >
+            <input
+              aria-label={Locale.Settings.EnableSearch.Title}
+              type="checkbox"
+              checked={props.modelConfig.enableSearch}
+              onChange={(e) =>
+                props.updateConfig(
+                  (config) => (config.enableSearch = e.currentTarget.checked),
+                )
+              }
+            ></input>
+          </ListItem>
+
+          <ListItem
             title={Locale.Settings.InputTemplate.Title}
             subTitle={Locale.Settings.InputTemplate.SubTitle}
           >

@@ -46,6 +46,16 @@ interface RequestParam {
   repetition_penalty?: number;
   top_p: number;
   max_tokens?: number;
+  enable_search?: boolean;
+  search_options?: {
+    search_strategy?: "standard" | "pro";
+    enable_source?: boolean;
+    enable_citation?: boolean;
+    forced_search?: boolean;
+  };
+  stream_options?: {
+    include_usage?: boolean;
+  };
 }
 interface RequestPayload {
   model: string;
@@ -117,6 +127,16 @@ export class QwenApi implements LLMApi {
         temperature: modelConfig.temperature,
         // max_tokens: modelConfig.max_tokens,
         top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p, // qwen top_p is should be < 1
+        enable_search: modelConfig.enableSearch,
+        search_options: modelConfig.enableSearch
+          ? {
+              search_strategy: "pro",
+              enable_source: true,
+              enable_citation: true,
+              forced_search: false,
+            }
+          : undefined,
+        stream_options: shouldStream ? { include_usage: true } : undefined,
       },
     };
 
@@ -126,7 +146,9 @@ export class QwenApi implements LLMApi {
     try {
       const headers = {
         ...getHeaders(),
+        "Content-Type": "application/json",
         "X-DashScope-SSE": shouldStream ? "enable" : "disable",
+        "X-Accel-Buffering": "no", // Required for proper SSE handling
       };
 
       const chatPath = this.path(Alibaba.ChatPath);
@@ -185,7 +207,7 @@ export class QwenApi implements LLMApi {
                   },
                 });
               } else {
-                // @ts-ignore
+                // @ts-expect-error Function arguments concatenation
                 runTools[index]["function"]["arguments"] += args;
               }
             }
