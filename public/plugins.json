@@ -13,5 +13,13 @@
     "id": "duckduckgolite",
     "name": "DuckDuckGoLiteSearch",
     "schema": "https://ghp.ci/https://raw.githubusercontent.com/ChatGPTNextWeb/NextChat-Awesome-Plugins/main/plugins/duckduckgolite/openapi.json"
+  },
+  {
+    "id": "alibaba-search",
+    "name": "AlibabaSearch",
+    "schema": "/plugins/alibaba-search.yaml",
+    "authType": "bearer",
+    "authLocation": "header",
+    "authHeader": "Authorization"
   }
 ]

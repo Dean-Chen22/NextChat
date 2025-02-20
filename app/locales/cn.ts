@@ -198,6 +198,31 @@ const cn = {
       Title: "启用网络搜索",
       SubTitle: "允许模型搜索互联网获取最新信息",
     },
+    AlibabaSearch: {
+      Name: "阿里云搜索",
+      Description: "使用阿里云搜索服务搜索互联网",
+      Industry: {
+        Title: "行业",
+        Description: "选择特定行业进行搜索",
+        Finance: "金融",
+        Law: "法律",
+        Medical: "医疗",
+        Internet: "互联网",
+        Tax: "税务",
+        NewsProvince: "省级新闻",
+        NewsCenter: "中央新闻",
+      },
+      TimeRange: {
+        Title: "时间范围",
+        Description: "选择搜索结果的时间范围",
+        OneDay: "最近24小时",
+        OneWeek: "最近一周",
+        OneMonth: "最近一月",
+        OneYear: "最近一年",
+        NoLimit: "不限时间",
+      },
+    },
+
     InputTemplate: {
       Title: "用户输入预处理",
       SubTitle: "用户最新的一条消息会填充到此模板",

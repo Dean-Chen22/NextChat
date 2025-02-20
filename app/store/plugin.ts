@@ -6,8 +6,21 @@ import { getClientConfig } from "../config/client";
 import yaml from "js-yaml";
 import { adapter, getOperationId } from "../utils";
 import { useAccessStore } from "./access";
+import { AlibabaSearchConfig } from "../plugins/alibaba-search";
 
 const isApp = getClientConfig()?.isApp !== false;
+
+export const BuiltinPlugins: Plugin[] = [AlibabaSearchConfig];
+
+export type PluginSetting = {
+  type: "select" | "number";
+  options?: string[];
+  title: string;
+  description?: string;
+  min?: number;
+  max?: number;
+  default?: string | number;
+};
 
 export type Plugin = {
   id: string;
@@ -20,6 +33,7 @@ export type Plugin = {
   authLocation?: string;
   authHeader?: string;
   authToken?: string;
+  settings?: Record<string, PluginSetting>;
 };
 
 export type FunctionToolItem = {
@@ -27,7 +41,7 @@ export type FunctionToolItem = {
   function: {
     name: string;
     description?: string;
-    parameters: Object;
+    parameters: Record<string, unknown>;
   };
 };
 
@@ -35,7 +49,7 @@ type FunctionToolServiceItem = {
   api: OpenAPIClientAxios;
   length: number;
   tools: FunctionToolItem[];
-  funcs: Record<string, Function>;
+  funcs: Record<string, (args: Record<string, unknown>) => Promise<unknown>>;
 };
 
 export const FunctionToolService = {
@@ -78,13 +92,13 @@ export const FunctionToolService = {
     });
     try {
       api.initSync();
-    } catch (e) {}
+    } catch {}
     const operations = api.getOperations();
     return (this.tools[plugin.id] = {
       api,
       length: operations.length,
       tools: operations.map((o) => {
-        // @ts-ignore
+        // @ts-expect-error Request body content may be undefined
         const parameters = o?.requestBody?.content["application/json"]
           ?.schema || {
           type: "object",
@@ -95,18 +109,18 @@ export const FunctionToolService = {
         }
         if (o.parameters instanceof Array) {
           o.parameters.forEach((p) => {
-            // @ts-ignore
+            // @ts-expect-error Parameter may be undefined
             if (p?.in == "query" || p?.in == "path") {
               // const name = `${p.in}__${p.name}`
-              // @ts-ignore
+              // @ts-expect-error Name may be undefined
               const name = p?.name;
               parameters["properties"][name] = {
-                // @ts-ignore
+                // @ts-expect-error Schema type may be undefined
                 type: p.schema.type,
-                // @ts-ignore
+                // @ts-expect-error Description may be undefined
                 description: p.description,
               };
-              // @ts-ignore
+              // @ts-expect-error Required field may be undefined
               if (p.required) {
                 parameters["required"].push(name);
               }
@@ -123,14 +137,14 @@ export const FunctionToolService = {
         } as FunctionToolItem;
       }),
       funcs: operations.reduce((s, o) => {
-        // @ts-ignore
+        // @ts-expect-error Function parameters are dynamic
         s[getOperationId(o)] = function (args) {
           const parameters: Record<string, any> = {};
           if (o.parameters instanceof Array) {
             o.parameters.forEach((p) => {
-              // @ts-ignore
+              // @ts-expect-error Parameter name may be undefined
               parameters[p?.name] = args[p?.name];
-              // @ts-ignore
+              // @ts-expect-error Parameter name may be undefined
               delete args[p?.name];
             });
           }
@@ -139,7 +153,7 @@ export const FunctionToolService = {
           } else if (authLocation == "body") {
             args[headerName] = tokenValue;
           }
-          // @ts-ignore if o.operationId is null, then using o.path and o.method
+          // @ts-expect-error Operation ID may be null, fallback to path and method
           return api.client.paths[o.path][o.method](
             parameters,
             args,
@@ -213,7 +227,7 @@ export const usePluginStore = createPersistStore(
         .filter((i) => i)
         .map((p) => FunctionToolService.add(p));
       return [
-        // @ts-ignore
+        // @ts-expect-error Tools array concatenation
         selected.reduce((s, i) => s.concat(i.tools), []),
         selected.reduce((s, i) => Object.assign(s, i.funcs), {}),
       ];
@@ -250,7 +264,7 @@ export const usePluginStore = createPersistStore(
                       ...item,
                       content,
                     }))
-                    .catch((e) => item),
+                    .catch(() => item),
             ),
           ).then((builtinPlugins: any) => {
             builtinPlugins

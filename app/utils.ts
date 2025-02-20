@@ -7,6 +7,7 @@ import {
   REQUEST_TIMEOUT_MS_FOR_THINKING,
   ServiceProvider,
 } from "./constant";
+import { usePluginStore, Plugin } from "./store/plugin";
 // import { fetch as tauriFetch, ResponseType } from "@tauri-apps/api/http";
 import { fetch as tauriStreamFetch } from "./utils/stream";
 import { VISION_MODEL_REGEXES, EXCLUDE_VISION_MODEL_REGEXES } from "./constant";
@@ -34,7 +35,7 @@ export async function copyToClipboard(text: string) {
     }
 
     showToast(Locale.Copy.Success);
-  } catch (error) {
+  } catch {
     const textArea = document.createElement("textarea");
     textArea.value = text;
     document.body.appendChild(textArea);
@@ -43,7 +44,7 @@ export async function copyToClipboard(text: string) {
     try {
       document.execCommand("copy");
       showToast(Locale.Copy.Success);
-    } catch (error) {
+    } catch {
       showToast(Locale.Copy.Failed);
     }
     document.body.removeChild(textArea);
@@ -70,7 +71,7 @@ export async function downloadAs(text: string, filename: string) {
       try {
         await window.__TAURI__.fs.writeTextFile(result, text);
         showToast(Locale.Download.Success);
-      } catch (error) {
+      } catch {
         showToast(Locale.Download.Failed);
       }
     } else {
@@ -340,6 +341,14 @@ export function showPlugins(provider: ServiceProvider, model: string) {
     provider == ServiceProvider.ChatGLM ||
     provider == ServiceProvider.Alibaba
   ) {
+    // Disable DuckDuckGo plugin when Alibaba Search is enabled
+    const plugins = usePluginStore.getState().plugins;
+    const duckDuckGoPlugin = Object.values(plugins).find(
+      (p) => (p as Plugin).id === "duckduckgolite",
+    );
+    if (duckDuckGoPlugin && provider === ServiceProvider.Alibaba) {
+      return false;
+    }
     return true;
   }
   if (provider == ServiceProvider.Anthropic && !model.includes("claude-2")) {
@@ -455,7 +464,7 @@ export function clientUpdate() {
       if (updateResult.shouldUpdate) {
         window.__TAURI__?.updater
           .installUpdate()
-          .then((result) => {
+          .then(() => {
             showToast(Locale.Settings.Update.Success);
           })
           .catch((e) => {

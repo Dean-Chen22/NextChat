@@ -52,6 +52,9 @@ interface RequestParam {
     enable_source?: boolean;
     enable_citation?: boolean;
     forced_search?: boolean;
+    industry?: string;
+    timeRange?: string;
+    page?: number;
   };
   stream_options?: {
     include_usage?: boolean;
@@ -94,7 +97,7 @@ export class QwenApi implements LLMApi {
     return res?.output?.choices?.at(0)?.message?.content ?? "";
   }
 
-  speech(options: SpeechOptions): Promise<ArrayBuffer> {
+  speech(_options: SpeechOptions): Promise<ArrayBuffer> {
     throw new Error("Method not implemented.");
   }
 
@@ -134,6 +137,9 @@ export class QwenApi implements LLMApi {
               enable_source: true,
               enable_citation: true,
               forced_search: false,
+              industry: modelConfig.settings?.industry,
+              timeRange: modelConfig.settings?.timeRange,
+              page: modelConfig.settings?.page || 1,
             }
           : undefined,
         stream_options: shouldStream ? { include_usage: true } : undefined,
@@ -266,9 +272,24 @@ export class QwenApi implements LLMApi {
         const message = this.extractMessage(resJson);
         options.onFinish(message, res);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.log("[Request] failed to make a chat request", e);
-      options.onError?.(e as Error);
+      const error = e as Error;
+      if (error.message.includes("Retrieval.Throttling.User")) {
+        options.onError?.(
+          new Error("Rate limit exceeded. Please try again later."),
+        );
+      } else if (error.message.includes("InvalidAccessKeyId.NotFound")) {
+        options.onError?.(
+          new Error("Invalid API key. Please check your credentials."),
+        );
+      } else if (error.message.includes("Retrieval.NotAuthorised")) {
+        options.onError?.(
+          new Error("Unauthorized. Please check your API permissions."),
+        );
+      } else {
+        options.onError?.(error);
+      }
     }
   }
   async usage() {

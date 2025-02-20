@@ -78,6 +78,7 @@ export const DEFAULT_CONFIG = {
     compressProviderName: "",
     enableInjectSystemPrompts: true,
     enableSearch: false,
+    settings: {} as Record<string, any>,
     template: config?.template ?? DEFAULT_INPUT_TEMPLATE,
     size: "1024x1024" as ModelSize,
     quality: "standard" as DalleQuality,

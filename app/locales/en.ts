@@ -201,6 +201,30 @@ const en: LocaleType = {
       SubTitle:
         "Allow the model to search the internet for up-to-date information",
     },
+    AlibabaSearch: {
+      Name: "Alibaba Search",
+      Description: "Search the internet using Alibaba Cloud Search Service",
+      Industry: {
+        Title: "Industry",
+        Description: "Select industry for specialized search results",
+        Finance: "Finance",
+        Law: "Law",
+        Medical: "Medical",
+        Internet: "Internet",
+        Tax: "Tax",
+        NewsProvince: "Provincial News",
+        NewsCenter: "Central News",
+      },
+      TimeRange: {
+        Title: "Time Range",
+        Description: "Select time range for search results",
+        OneDay: "Last 24 Hours",
+        OneWeek: "Last Week",
+        OneMonth: "Last Month",
+        OneYear: "Last Year",
+        NoLimit: "No Limit",
+      },
+    },
     InputTemplate: {
       Title: "Input Template",
       SubTitle: "Newest message will be filled to this template",
