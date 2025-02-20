@@ -46,6 +46,10 @@ interface RequestParam {
   repetition_penalty?: number;
   top_p: number;
   max_tokens?: number;
+  enable_search?: boolean;
+  stream_options?: {
+    include_usage?: boolean;
+  };
 }
 interface RequestPayload {
   model: string;
@@ -117,6 +121,8 @@ export class QwenApi implements LLMApi {
         temperature: modelConfig.temperature,
         // max_tokens: modelConfig.max_tokens,
         top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p, // qwen top_p is should be < 1
+        enable_search: modelConfig.enableSearch,
+        stream_options: shouldStream ? { include_usage: true } : undefined,
       },
     };
 
@@ -185,7 +191,7 @@ export class QwenApi implements LLMApi {
                   },
                 });
               } else {
-                // @ts-ignore
+                // @ts-expect-error Function arguments concatenation
                 runTools[index]["function"]["arguments"] += args;
               }
             }
