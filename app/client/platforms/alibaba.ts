@@ -90,7 +90,7 @@ export class QwenApi implements LLMApi {
 
     console.log("[Proxy Endpoint] ", baseUrl, path);
 
-    return [baseUrl, path].join("/");
+    return baseUrl.endsWith(path) ? baseUrl : [baseUrl, path].join("/");
   }
 
   extractMessage(res: any) {
@@ -157,7 +157,7 @@ export class QwenApi implements LLMApi {
         "X-Accel-Buffering": "no", // Required for proper SSE handling
       };
 
-      const chatPath = this.path(Alibaba.ChatPath);
+      const chatPath = `${ALIBABA_BASE_URL}/${Alibaba.ChatPath}`;
       const chatPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
