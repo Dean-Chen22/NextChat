@@ -157,7 +157,7 @@ export class QwenApi implements LLMApi {
         "X-Accel-Buffering": "no", // Required for proper SSE handling
       };
 
-      const chatPath = `${ALIBABA_BASE_URL}/v1/chat/completions`;
+      const chatPath = `${ALIBABA_BASE_URL}/${Alibaba.ChatPath}`;
       const chatPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
